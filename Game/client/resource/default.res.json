@@ -1,0 +1,15 @@
+{
+	"groups": [
+		{
+			"name": "preload",
+			"keys": "cartoon-egret_00_png"
+		}
+	],
+	"resources": [
+		{
+			"name": "cartoon-egret_00_png",
+			"type": "image",
+			"url": "cartoon-egret_00.png"
+		}
+	]
+}
