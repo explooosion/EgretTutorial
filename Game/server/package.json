@@ -1,18 +1,60 @@
 {
-  "name": "mqttsrv",
-  "version": "0.0.0",
-  "private": true,
+  "name": "server",
+  "version": "2.3.0",
+  "description": "egret game server",
+  "main": "start.js",
   "scripts": {
-    "start": "node ./bin/www"
+    "test": "mocha --compilers js:babel-core/register --require babel-polyfill",
+    "dev": "./node_modules/.bin/nodemon start.js",
+    "start": "pm2 start start.js",
+    "stop": "pm2 kill"
   },
+  "author": "Robby",
+  "repository": "EgretTutorial",
+  "keywords": [
+    "egret"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "body-parser": "~1.18.2",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "ejs": "~2.5.7",
-    "express": "~4.15.5",
-    "morgan": "~1.9.0",
+    "dotenv": "^4.0.0",
+    "ejs": "^2.5.7",
+    "koa": "^2.4.1",
+    "koa-bodyparser": "^4.2.0",
+    "koa-compose": "^4.0.0",
+    "koa-convert": "^1.2.0",
+    "koa-logger": "^3.1.0",
+    "koa-mount": "^3.0.0",
+    "koa-router": "^7.3.0",
+    "koa-static": "^4.0.1",
+    "koa-views": "^6.1.2",
+    "mongoose": "^5.0.3",
+    "mosca": "^2.7.0",
     "mqtt": "^2.15.1",
-    "serve-favicon": "~2.4.5"
-  }
+    "nodemon": "^1.12.1",
+    "open": "0.0.5",
+    "pm2": "^2.7.2",
+    "pug": "^2.0.0-rc.4"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "eslint": "^4.12.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-formatting": "0.0.4",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-mocha": "^4.11.0",
+    "gulp": "^3.9.1",
+    "gulp-sass": "^3.1.0",
+    "mocha": "^4.0.1",
+    "supertest": "^3.0.0",
+    "tape": "^4.8.0"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "homepage": "https://github.com/explooosion/EgretTutorial"
 }
