@@ -4,8 +4,8 @@ let mqttClient = null;
 
 function connect() {
 
-    // Messaging from lib(mqttws.31.js)
-    mqttClient = new Messaging.Client(serverAddress, 1994, document.querySelector('input').value);
+    // Paho.MQTT from lib(mqttws.31.js)
+    mqttClient = new Paho.MQTT.Client(serverAddress, 1994, document.querySelector('input').value);
     const connectionOptions = {
         keepAliveInterval: 0,
         onSuccess: onConnect,
@@ -50,7 +50,7 @@ function onConnect() {
 }
 
 function roomCreate() {
-    const payload = new Messaging.Message(JSON.stringify({
+    const payload = new Paho.MQTT.Message(JSON.stringify({
         action: 'create',
         key: 'dadkfh'
     }));
@@ -61,7 +61,7 @@ function roomCreate() {
 }
 
 function roomJoin() {
-    const payload = new Messaging.Message(JSON.stringify({
+    const payload = new Paho.MQTT.Message(JSON.stringify({
         action: 'join',
         key: 'dadkfh'
     }));
