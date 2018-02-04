@@ -7,7 +7,7 @@
     "native": 1,
     "path": "bin-release"
   },
-  "egret_version": "5.0.14",
+  "egret_version": "5.0.2",
   "template": {},
   "modules": [
     {
@@ -28,6 +28,10 @@
     {
       "name": "promise",
       "path": "./promise"
+    },
+    {
+      "name": "paho-mqtt",
+      "path": "../libsrc"
     }
   ]
 }

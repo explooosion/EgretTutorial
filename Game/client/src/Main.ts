@@ -1,6 +1,7 @@
 class Main extends egret.DisplayObjectContainer {
 
     private socket: egret.WebSocket;
+    private mqttClient: Paho.MQTT.Client;
 
     public constructor() {
         super();
@@ -26,8 +27,6 @@ class Main extends egret.DisplayObjectContainer {
         bird.x = this.stage.stageWidth * .5;
         bird.y = this.stage.stageHeight * .5;
 
-        this.socketAction();
-
         document.addEventListener("keydown", function (event) {
             switch (event.which) {
                 case 37:
@@ -51,19 +50,5 @@ class Main extends egret.DisplayObjectContainer {
 
     }
 
-    private socketAction() {
-        this.socket = new egret.WebSocket();
-        this.socket.type = egret.WebSocket.TYPE_STRING;
-        this.socket.addEventListener(egret.ProgressEvent.SOCKET_DATA, this.onReceiveMessage, this);
-        this.socket.addEventListener(egret.Event.CONNECT, this.onSocketOpen, this);
-        this.socket.connect("echo.websocket.org", 80);
-    }
 
-    private onReceiveMessage(e) {
-        console.log(e);
-    }
-
-    private onSocketOpen(e) {
-        console.log('connect successful');
-    }
 }

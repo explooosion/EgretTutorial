@@ -6,7 +6,8 @@
 		"libs/modules/eui/eui.js",
 		"libs/modules/socket/socket.js",
 		"libs/modules/tween/tween.js",
-		"promise/bin/promise.js"
+		"promise/bin/promise.js",
+		"libs/modules/paho-mqtt/paho-mqtt.js"
 	],
 	"game": [
 		"bin-debug/Main.js"
