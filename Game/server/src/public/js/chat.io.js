@@ -1,11 +1,11 @@
-const serverAddress = 'localhost';
+const serverAddress = '60.249.179.126';
 const reconnectTimeout = 3000;
 let mqttClient = null;
 
 function connect() {
 
     // Paho.MQTT from lib(mqttws.31.js)
-    mqttClient = new Paho.MQTT.Client(serverAddress, 1994, document.querySelector('input').value);
+    mqttClient = new Paho.MQTT.Client(serverAddress, 8083, document.querySelector('input').value);
     const connectionOptions = {
         keepAliveInterval: 0,
         onSuccess: onConnect,
@@ -21,7 +21,12 @@ function connect() {
 }
 
 function onMessageArrived(message) {
-    const msg = JSON.parse(message.payloadString);
+    let msg;
+    try {
+        msg = JSON.parse(message.payloadString)
+    } catch (e) {
+        msg = message.payloadString;
+    }
     const topic = message.destinationName;
     console.log({
         topic,
@@ -32,6 +37,7 @@ function onMessageArrived(message) {
 }
 
 function onConnectionLost(response) {
+    console.log(response);
     document.querySelector('.btnConn').disabled = false;
     setTimeout(connect, reconnectTimeout);
 }
@@ -47,6 +53,8 @@ function onConnect() {
     // 訂閱訊息
     mqttClient.subscribe('online');
     mqttClient.subscribe('offline');
+
+    mqttClient.subscribe('test');
 }
 
 function roomCreate() {
