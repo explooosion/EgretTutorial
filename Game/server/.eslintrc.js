@@ -37,5 +37,10 @@ module.exports = {
         "no-undef": 0,
         "import/first": 0,
         "default-case": 0,
+        "spaced-comment": 0,
+        "no-trailing-spaces": 0,
+        "wrap-iife":0,
+        "no-tabs":0,
+        "quotes":0,
     }
 };
