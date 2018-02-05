@@ -10,6 +10,7 @@
 		"libs/modules/paho-mqtt/paho-mqtt.js"
 	],
 	"game": [
+		"bin-debug/Broker.js",
 		"bin-debug/Main.js"
 	]
 }
