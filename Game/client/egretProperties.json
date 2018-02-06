@@ -7,23 +7,23 @@
     "native": 1,
     "path": "bin-release"
   },
-  "egret_version": "5.0.2",
+  "egret_version": "5.0.14",
   "template": {},
   "modules": [
     {
       "name": "egret"
     },
     {
+      "name": "game"
+    },
+    {
+      "name": "tween"
+    },
+    {
       "name": "res"
     },
     {
       "name": "eui"
-    },
-    {
-      "name": "socket"
-    },
-    {
-      "name": "tween"
     },
     {
       "name": "promise",
