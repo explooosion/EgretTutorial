@@ -78,14 +78,7 @@ var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
         var _this = _super.call(this) || this;
-        _this.reconnectTimeout = 3000;
-        _this.serverAddress = '60.249.179.126';
-        _this.serverPort = 8083;
-        _this.masterId = 'dadkfh';
-        _this.clientId = 'mqttclient123456';
-        _this.playerId = '';
-        _this.mapId = '';
-        _this.others = [];
+        _this.gd = new GameData();
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
         return _this;
     }
@@ -208,19 +201,19 @@ var Main = (function (_super) {
             switch (event.which) {
                 case 37:
                     console.log('左');
-                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.gd.playerId);
                     break;
                 case 38:
                     console.log('上');
-                    _Main.moveCharacter('move', _Main.img.x, _this.img.y - 5, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x, _this.img.y - 5, _Main.gd.playerId);
                     break;
                 case 39:
                     console.log('右');
-                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.gd.playerId);
                     break;
                 case 40:
                     console.log('下');
-                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.gd.playerId);
                     break;
             }
         });
@@ -231,7 +224,7 @@ var Main = (function (_super) {
      */
     Main.prototype.connect = function () {
         var _this = this;
-        this.mqttClient = new Paho.MQTT.Client(this.serverAddress, this.serverPort, this.clientId);
+        this.mqttClient = new Paho.MQTT.Client(this.gd.serverAddress, this.gd.serverPort, this.gd.clientId);
         var connectionOptions = {
             keepAliveInterval: 30,
             // requestQoS: 0,
@@ -253,7 +246,7 @@ var Main = (function (_super) {
         };
         this.mqttClient.connect(connectionOptions);
         this.mqttClient.onMessageArrived = function (message) { return __awaiter(_this, void 0, void 0, function () {
-            var msg, topic;
+            var msg, topic, res;
             return __generator(this, function (_a) {
                 try {
                     msg = JSON.parse(message.payloadString);
@@ -268,30 +261,26 @@ var Main = (function (_super) {
                 // });
                 // use switch ... case to do sth.
                 switch (topic) {
-                    case "join/" + this.masterId:
-                        this.playerId = msg.id;
-                        this.mapId = msg.map;
+                    case "join/" + this.gd.masterId:
+                        this.gd.playerId = msg.id;
+                        this.gd.mapId = msg.map;
                         // 加入房間後立即取得角色資訊
-                        this.mqttClient.subscribe("game/" + this.masterId + "/" + this.playerId);
+                        this.mqttClient.subscribe("game/" + this.gd.masterId + "/" + this.gd.playerId);
                         break;
-                    case "game/" + this.masterId + "/" + this.playerId:
-                        this.attack = msg.attack;
-                        this.hp = msg.hp;
-                        this.others = msg.others;
-                        this.team = msg.team;
-                        this.px = msg.x;
-                        this.py = msg.y;
-                        console.log(this.px, this.py);
+                    case "game/" + this.gd.masterId + "/" + this.gd.playerId:
+                        res = msg;
+                        this.gd.player = res;
+                        console.log(this.gd.player);
                         egret.Tween.get(this.img)
-                            .to({ x: this.px, y: this.px }, 300, egret.Ease.sineInOut);
+                            .to({ x: this.gd.player.x, y: this.gd.player.y }, 300, egret.Ease.sineInOut);
                         break;
                 }
                 return [2 /*return*/];
             });
         }); };
         this.mqttClient.onConnectionLost = function () {
-            console.log('connection to server lost. Attempting to reconnect in ' + _this.reconnectTimeout + ' ms');
-            setTimeout(_this.connect, _this.reconnectTimeout);
+            console.log('connection to server lost. Attempting to reconnect in ' + _this.gd.reconnectTimeout + ' ms');
+            setTimeout(_this.connect, _this.gd.reconnectTimeout);
         };
     };
     /**
@@ -300,11 +289,11 @@ var Main = (function (_super) {
     Main.prototype.roomJoin = function () {
         this.payload = new Paho.MQTT.Message(JSON.stringify({
             action: 'join',
-            key: this.masterId
+            key: this.gd.masterId
         }));
         this.payload.destinationName = 'room';
         this.mqttClient.send(this.payload);
-        this.mqttClient.subscribe("join/" + this.masterId);
+        this.mqttClient.subscribe("join/" + this.gd.masterId);
     };
     Main.prototype.btnTouchHandler = function (event) {
         if (this.mqttClient.isConnected) {
@@ -322,7 +311,7 @@ var Main = (function (_super) {
             y: _y,
             id: _id,
         }));
-        this.payload.destinationName = "game/" + this.masterId;
+        this.payload.destinationName = "game/" + this.gd.masterId;
         this.mqttClient.send(this.payload);
     };
     return Main;

@@ -42,30 +42,13 @@ class Main extends egret.DisplayObjectContainer {
     private mqttClient: Paho.MQTT.Client;
     private payload: Paho.MQTT.Message;
 
-    private reconnectTimeout = 3000;
-    private serverAddress: string = '60.249.179.126';
-    private serverPort: number = 8083;
-
-    private message: any;
-    private topic: string;
-
-    private masterId: string = 'dadkfh';
-    private clientId: string = 'mqttclient123456';
-    private playerId: string = '';
-    private mapId: string = '';
-
-    // 角色鄰近訊息
-    private attack: number;
-    private hp: number;
-    private others: Object = [];
-    private team: number;
-    private px: number;
-    private py: number;
+    private gd: GameData;
 
     private img: egret.Bitmap;
 
     public constructor() {
         super();
+        this.gd = new GameData();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
 
@@ -86,7 +69,6 @@ class Main extends egret.DisplayObjectContainer {
         egret.lifecycle.onResume = () => {
             egret.ticker.resume();
         }
-
 
         //设置加载进度界面
         //Config to load process interface
@@ -193,7 +175,6 @@ class Main extends egret.DisplayObjectContainer {
         btnImg.touchEnabled = true;
         btnImg.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
 
-
         // touchAPEventer
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, (event: egret.TouchEvent) => {
             //console.log(`${event.stageX}:${event.stageY}`);
@@ -207,19 +188,19 @@ class Main extends egret.DisplayObjectContainer {
             switch (event.which) {
                 case 37:
                     console.log('左');
-                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.gd.playerId);
                     break;
                 case 38:
                     console.log('上');
-                    _Main.moveCharacter('move', _Main.img.x, this.img.y - 5, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x, this.img.y - 5, _Main.gd.playerId);
                     break;
                 case 39:
                     console.log('右');
-                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.gd.playerId);
                     break;
                 case 40:
                     console.log('下');
-                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.playerId);
+                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.gd.playerId);
                     break;
             }
         });
@@ -232,7 +213,7 @@ class Main extends egret.DisplayObjectContainer {
      */
     private connect(): void {
 
-        this.mqttClient = new Paho.MQTT.Client(this.serverAddress, this.serverPort, this.clientId);
+        this.mqttClient = new Paho.MQTT.Client(this.gd.serverAddress, this.gd.serverPort, this.gd.clientId);
         const connectionOptions = {
             keepAliveInterval: 30,
             // requestQoS: 0,
@@ -273,31 +254,32 @@ class Main extends egret.DisplayObjectContainer {
 
             // use switch ... case to do sth.
             switch (topic) {
-                case `join/${this.masterId}`:
-                    this.playerId = msg.id;
-                    this.mapId = msg.map;
+                case `join/${this.gd.masterId}`:
+
+                    this.gd.playerId = msg.id;
+                    this.gd.mapId = msg.map;
 
                     // 加入房間後立即取得角色資訊
-                    this.mqttClient.subscribe(`game/${this.masterId}/${this.playerId}`);
+                    this.mqttClient.subscribe(`game/${this.gd.masterId}/${this.gd.playerId}`);
                     break;
-                case `game/${this.masterId}/${this.playerId}`:
-                    this.attack = msg.attack;
-                    this.hp = msg.hp;
-                    this.others = msg.others;
-                    this.team = msg.team;
-                    this.px = msg.x;
-                    this.py = msg.y;
-                    console.log(this.px, this.py);
+
+                case `game/${this.gd.masterId}/${this.gd.playerId}`:
+
+                    let res: StatusSub = msg;
+                    this.gd.player = res;
+
+                    console.log(this.gd.player);
 
                     egret.Tween.get(this.img)
-                        .to({ x: this.px, y: this.px }, 300, egret.Ease.sineInOut);
+                        .to({ x: this.gd.player.x, y: this.gd.player.y }, 300, egret.Ease.sineInOut);
+
                     break;
             }
         };
 
         this.mqttClient.onConnectionLost = (): void => {
-            console.log('connection to server lost. Attempting to reconnect in ' + this.reconnectTimeout + ' ms');
-            setTimeout(this.connect, this.reconnectTimeout);
+            console.log('connection to server lost. Attempting to reconnect in ' + this.gd.reconnectTimeout + ' ms');
+            setTimeout(this.connect, this.gd.reconnectTimeout);
         };
     }
 
@@ -307,12 +289,12 @@ class Main extends egret.DisplayObjectContainer {
     private roomJoin() {
         this.payload = new Paho.MQTT.Message(JSON.stringify({
             action: 'join',
-            key: this.masterId
+            key: this.gd.masterId
         }));
         this.payload.destinationName = 'room';
         this.mqttClient.send(this.payload);
 
-        this.mqttClient.subscribe(`join/${this.masterId}`);
+        this.mqttClient.subscribe(`join/${this.gd.masterId}`);
     }
 
     private btnTouchHandler(event: egret.TouchEvent): void {
@@ -333,7 +315,7 @@ class Main extends egret.DisplayObjectContainer {
             y: _y,
             id: _id,
         }));
-        this.payload.destinationName = `game/${this.masterId}`;
+        this.payload.destinationName = `game/${this.gd.masterId}`;
         this.mqttClient.send(this.payload);
 
     }
