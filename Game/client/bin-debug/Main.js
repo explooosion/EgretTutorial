@@ -81,7 +81,11 @@ var Main = (function (_super) {
         _this.reconnectTimeout = 3000;
         _this.serverAddress = '60.249.179.126';
         _this.serverPort = 8083;
-        _this.clientId = 'mqttjs_123456';
+        _this.masterId = 'dadkfh';
+        _this.clientId = 'mqttclient123456';
+        _this.playerId = '';
+        _this.mapId = '';
+        _this.others = [];
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
         return _this;
     }
@@ -162,6 +166,16 @@ var Main = (function (_super) {
         }
     };
     /**
+     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
+     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
+     */
+    Main.prototype.createBitmapByName = function (name) {
+        var result = new egret.Bitmap();
+        var texture = RES.getRes(name);
+        result.texture = texture;
+        return result;
+    };
+    /**
      * 创建游戏场景
      * Create a game scene
      */
@@ -172,26 +186,21 @@ var Main = (function (_super) {
         this.addChild(this.img);
         this.img.x = 26;
         this.img.y = 33;
-        // Button
-        var btnJoin = new eui.Button();
-        btnJoin.x = 100;
-        btnJoin.y = 100;
-        btnJoin.width = 400;
-        btnJoin.height = 40;
-        btnJoin.label = '加入房間';
-        btnJoin.skinName = "resource/eui_skins/ButtonSkin.exml";
-        this.addChild(btnJoin);
-        btnJoin.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
         this.img.x = this.stage.stageWidth * .5;
         this.img.y = this.stage.stageHeight * .5;
-        this.img.touchEnabled = true;
-        this.img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
-        }, this);
+        // Button
+        var btnImg = new egret.Bitmap();
+        btnImg = this.createBitmapByName("button-join_png");
+        this.addChild(btnImg);
+        btnImg.x = 0;
+        btnImg.y = 0;
+        btnImg.touchEnabled = true;
+        btnImg.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
         // touchAPEventer
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, function (event) {
-            console.log(event.stageX + ":" + event.stageY);
-            egret.Tween.get(_this.img)
-                .to({ x: event.stageX, y: event.stageY }, 300, egret.Ease.quadIn);
+            //console.log(`${event.stageX}:${event.stageY}`);
+            // egret.Tween.get(this.img)
+            //     .to({ x: event.stageX, y: event.stageY }, 300, egret.Ease.quadIn);
         }, this);
         // keyDownEventer
         var _Main = this;
@@ -199,44 +208,44 @@ var Main = (function (_super) {
             switch (event.which) {
                 case 37:
                     console.log('左');
-                    _this.moveCharacter('move', _this.img.x - 5, _this.img.y, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.playerId);
                     break;
                 case 38:
                     console.log('上');
-                    _this.moveCharacter('move', _this.img.x, _this.img.y - 5, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x, _this.img.y - 5, _Main.playerId);
                     break;
                 case 39:
                     console.log('右');
-                    _this.moveCharacter('move', _this.img.x + 5, _this.img.y, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.playerId);
                     break;
                 case 40:
                     console.log('下');
-                    _this.moveCharacter('move', _this.img.x, _this.img.y + 5, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.playerId);
                     break;
             }
         });
     };
     /**
-     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
+     * MQTT 連線
+     * Connect to MQTT Server
      */
-    Main.prototype.createBitmapByName = function (name) {
-        var result = new egret.Bitmap();
-        var texture = RES.getRes(name);
-        result.texture = texture;
-        return result;
-    };
     Main.prototype.connect = function () {
         var _this = this;
         this.mqttClient = new Paho.MQTT.Client(this.serverAddress, this.serverPort, this.clientId);
         var connectionOptions = {
             keepAliveInterval: 30,
+            // requestQoS: 0,
             onSuccess: function () {
                 console.log('onSuccess', 'connecting success.');
-                // 開新房間
-                _this.mqttClient.subscribe('create/keyid');
-                // 了解目前狀態
-                _this.mqttClient.subscribe('game/keyid/clientid');
+                // 先開測試房間
+                // this.payload = new Paho.MQTT.Message(JSON.stringify({
+                //     action: 'create',
+                //     key: this.masterId
+                // }));
+                // this.payload.destinationName = 'room';
+                // this.mqttClient.send(this.payload);
+                // 訂閱-開新房間有沒有開成功
+                // this.mqttClient.subscribe(`create/${this.masterId}`);
             },
             onFailure: function (message) {
                 console.log('connection failed: ' + message.errorMessage);
@@ -246,7 +255,6 @@ var Main = (function (_super) {
         this.mqttClient.onMessageArrived = function (message) { return __awaiter(_this, void 0, void 0, function () {
             var msg, topic;
             return __generator(this, function (_a) {
-                console.log(message);
                 try {
                     msg = JSON.parse(message.payloadString);
                 }
@@ -254,15 +262,28 @@ var Main = (function (_super) {
                     msg = message.payloadString;
                 }
                 topic = message.destinationName;
-                console.log({
-                    topic: topic,
-                    msg: msg,
-                });
+                // console.log({
+                //     topic,
+                //     msg,
+                // });
                 // use switch ... case to do sth.
                 switch (topic) {
-                    case 'game/keyid/clientid':
+                    case "join/" + this.masterId:
+                        this.playerId = msg.id;
+                        this.mapId = msg.map;
+                        // 加入房間後立即取得角色資訊
+                        this.mqttClient.subscribe("game/" + this.masterId + "/" + this.playerId);
+                        break;
+                    case "game/" + this.masterId + "/" + this.playerId:
+                        this.attack = msg.attack;
+                        this.hp = msg.hp;
+                        this.others = msg.others;
+                        this.team = msg.team;
+                        this.px = msg.x;
+                        this.py = msg.y;
+                        console.log(this.px, this.py);
                         egret.Tween.get(this.img)
-                            .to({ x: this.img.x + 30, y: this.img.y }, 300, egret.Ease.sineInOut);
+                            .to({ x: this.px, y: this.px }, 300, egret.Ease.sineInOut);
                         break;
                 }
                 return [2 /*return*/];
@@ -273,60 +294,36 @@ var Main = (function (_super) {
             setTimeout(_this.connect, _this.reconnectTimeout);
         };
     };
-    Main.prototype.onMessageArrived = function (message) {
-        console.log(message);
-        var msg;
-        try {
-            msg = JSON.parse(message.payloadString);
-        }
-        catch (e) {
-            msg = message.payloadString;
-        }
-        var topic = message.destinationName;
-        console.log({
-            topic: topic,
-            msg: msg,
-        });
-        // use switch ... case to do sth.
-        switch (topic) {
-            case 'game/keyid/clientid':
-                egret.Tween.get(this.img)
-                    .to({ x: this.img.x + 5, y: this.img.y + 5 }, 300, egret.Ease.sineInOut);
-                break;
+    /**
+     * 加入房間
+     */
+    Main.prototype.roomJoin = function () {
+        this.payload = new Paho.MQTT.Message(JSON.stringify({
+            action: 'join',
+            key: this.masterId
+        }));
+        this.payload.destinationName = 'room';
+        this.mqttClient.send(this.payload);
+        this.mqttClient.subscribe("join/" + this.masterId);
+    };
+    Main.prototype.btnTouchHandler = function (event) {
+        if (this.mqttClient.isConnected) {
+            // 加入房間 
+            this.roomJoin();
         }
     };
     /**
      * 角色移動
      */
     Main.prototype.moveCharacter = function (_action, _x, _y, _id) {
-        // this.payload = new Paho.MQTT.Message(JSON.stringify({
-        //     action: _action,
-        //     x: _x,
-        //     y: _y,
-        //     id: _id,
-        // }));
-        // this.payload.destinationName = 'game/keyid';
-        // this.mqttClient.send(this.payload);
-        // this.mqttClient.subscribe('game/keyid/clientid');
-        // this.mqttClient.subscribe('game/keyid/clientid');
-    };
-    /**
-     * 建立房間
-     */
-    Main.prototype.roomCreate = function () {
         this.payload = new Paho.MQTT.Message(JSON.stringify({
-            action: 'create',
-            key: 'dadkfh'
+            action: _action,
+            x: _x,
+            y: _y,
+            id: _id,
         }));
-        this.payload.destinationName = 'room';
+        this.payload.destinationName = "game/" + this.masterId;
         this.mqttClient.send(this.payload);
-        this.mqttClient.subscribe('create/keyid');
-    };
-    Main.prototype.btnTouchHandler = function (event) {
-        if (this.mqttClient.isConnected) {
-            // 加入房間 
-            this.mqttClient.subscribe('join/keyid');
-        }
     };
     return Main;
 }(egret.DisplayObjectContainer));

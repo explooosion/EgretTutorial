@@ -45,12 +45,23 @@ class Main extends egret.DisplayObjectContainer {
     private reconnectTimeout = 3000;
     private serverAddress: string = '60.249.179.126';
     private serverPort: number = 8083;
-    private clientId: string = 'mqttjs_123456';
 
     private message: any;
     private topic: string;
 
-    // Game
+    private masterId: string = 'dadkfh';
+    private clientId: string = 'mqttclient123456';
+    private playerId: string = '';
+    private mapId: string = '';
+
+    // 角色鄰近訊息
+    private attack: number;
+    private hp: number;
+    private others: Object = [];
+    private team: number;
+    private px: number;
+    private py: number;
+
     private img: egret.Bitmap;
 
     public constructor() {
@@ -148,6 +159,17 @@ class Main extends egret.DisplayObjectContainer {
     }
 
     /**
+     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
+     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
+     */
+    private createBitmapByName(name: string) {
+        let result = new egret.Bitmap();
+        let texture: egret.Texture = RES.getRes(name);
+        result.texture = texture;
+        return result;
+    }
+
+    /**
      * 创建游戏场景
      * Create a game scene
      */
@@ -159,30 +181,24 @@ class Main extends egret.DisplayObjectContainer {
         this.img.x = 26;
         this.img.y = 33;
 
-        // Button
-        let btnJoin = new eui.Button();
-        btnJoin.x = 100;
-        btnJoin.y = 100;
-        btnJoin.width = 400;
-        btnJoin.height = 40;
-        btnJoin.label = '加入房間';
-        btnJoin.skinName = "resource/eui_skins/ButtonSkin.exml";
-        this.addChild(btnJoin);
-        btnJoin.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
-
         this.img.x = this.stage.stageWidth * .5;
         this.img.y = this.stage.stageHeight * .5;
 
-        this.img.touchEnabled = true;
-        this.img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, () => {
-            
-        }, this);
+        // Button
+        var btnImg = new egret.Bitmap();
+        btnImg = this.createBitmapByName("button-join_png");
+        this.addChild(btnImg);
+        btnImg.x = 0;
+        btnImg.y = 0;
+        btnImg.touchEnabled = true;
+        btnImg.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
+
 
         // touchAPEventer
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, (event: egret.TouchEvent) => {
-            console.log(`${event.stageX}:${event.stageY}`);
-            egret.Tween.get(this.img)
-                .to({ x: event.stageX, y: event.stageY }, 300, egret.Ease.quadIn);
+            //console.log(`${event.stageX}:${event.stageY}`);
+            // egret.Tween.get(this.img)
+            //     .to({ x: event.stageX, y: event.stageY }, 300, egret.Ease.quadIn);
         }, this);
 
         // keyDownEventer
@@ -191,48 +207,48 @@ class Main extends egret.DisplayObjectContainer {
             switch (event.which) {
                 case 37:
                     console.log('左');
-                    this.moveCharacter('move', this.img.x - 5, this.img.y, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.playerId);
                     break;
                 case 38:
                     console.log('上');
-                    this.moveCharacter('move', this.img.x, this.img.y - 5, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x, this.img.y - 5, _Main.playerId);
                     break;
                 case 39:
                     console.log('右');
-                    this.moveCharacter('move', this.img.x + 5, this.img.y, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.playerId);
                     break;
                 case 40:
                     console.log('下');
-                    this.moveCharacter('move', this.img.x, this.img.y + 5, 'clientid');
+                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.playerId);
                     break;
             }
         });
     }
 
-    /**
-     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
-     */
-    private createBitmapByName(name: string) {
-        let result = new egret.Bitmap();
-        let texture: egret.Texture = RES.getRes(name);
-        result.texture = texture;
-        return result;
-    }
 
+    /**
+     * MQTT 連線
+     * Connect to MQTT Server
+     */
     private connect(): void {
 
         this.mqttClient = new Paho.MQTT.Client(this.serverAddress, this.serverPort, this.clientId);
         const connectionOptions = {
             keepAliveInterval: 30,
+            // requestQoS: 0,
             onSuccess: (): void => {
                 console.log('onSuccess', 'connecting success.');
 
-                // 開新房間
-                this.mqttClient.subscribe('create/keyid');
+                // 先開測試房間
+                // this.payload = new Paho.MQTT.Message(JSON.stringify({
+                //     action: 'create',
+                //     key: this.masterId
+                // }));
+                // this.payload.destinationName = 'room';
+                // this.mqttClient.send(this.payload);
 
-                // 了解目前狀態
-                this.mqttClient.subscribe('game/keyid/clientid');
+                // 訂閱-開新房間有沒有開成功
+                // this.mqttClient.subscribe(`create/${this.masterId}`);
 
             },
             onFailure(message) {
@@ -243,7 +259,6 @@ class Main extends egret.DisplayObjectContainer {
         this.mqttClient.connect(connectionOptions);
 
         this.mqttClient.onMessageArrived = async (message) => {
-            console.log(message);
             let msg;
             try {
                 msg = JSON.parse(message.payloadString)
@@ -251,16 +266,31 @@ class Main extends egret.DisplayObjectContainer {
                 msg = message.payloadString;
             }
             const topic = message.destinationName;
-            console.log({
-                topic,
-                msg,
-            });
+            // console.log({
+            //     topic,
+            //     msg,
+            // });
 
             // use switch ... case to do sth.
             switch (topic) {
-                case 'game/keyid/clientid':
+                case `join/${this.masterId}`:
+                    this.playerId = msg.id;
+                    this.mapId = msg.map;
+
+                    // 加入房間後立即取得角色資訊
+                    this.mqttClient.subscribe(`game/${this.masterId}/${this.playerId}`);
+                    break;
+                case `game/${this.masterId}/${this.playerId}`:
+                    this.attack = msg.attack;
+                    this.hp = msg.hp;
+                    this.others = msg.others;
+                    this.team = msg.team;
+                    this.px = msg.x;
+                    this.py = msg.y;
+                    console.log(this.px, this.py);
+
                     egret.Tween.get(this.img)
-                        .to({ x: this.img.x + 30, y: this.img.y }, 300, egret.Ease.sineInOut);
+                        .to({ x: this.px, y: this.px }, 300, egret.Ease.sineInOut);
                     break;
             }
         };
@@ -271,26 +301,24 @@ class Main extends egret.DisplayObjectContainer {
         };
     }
 
-    private onMessageArrived(message): void {
-        console.log(message);
-        let msg;
-        try {
-            msg = JSON.parse(message.payloadString)
-        } catch (e) {
-            msg = message.payloadString;
-        }
-        const topic = message.destinationName;
-        console.log({
-            topic,
-            msg,
-        });
+    /**
+     * 加入房間
+     */
+    private roomJoin() {
+        this.payload = new Paho.MQTT.Message(JSON.stringify({
+            action: 'join',
+            key: this.masterId
+        }));
+        this.payload.destinationName = 'room';
+        this.mqttClient.send(this.payload);
 
-        // use switch ... case to do sth.
-        switch (topic) {
-            case 'game/keyid/clientid':
-                egret.Tween.get(this.img)
-                    .to({ x: this.img.x + 5, y: this.img.y + 5 }, 300, egret.Ease.sineInOut);
-                break;
+        this.mqttClient.subscribe(`join/${this.masterId}`);
+    }
+
+    private btnTouchHandler(event: egret.TouchEvent): void {
+        if (this.mqttClient.isConnected) {
+            // 加入房間 
+            this.roomJoin();
         }
     }
 
@@ -299,40 +327,14 @@ class Main extends egret.DisplayObjectContainer {
      */
     private moveCharacter(_action, _x, _y, _id): void {
 
-        // this.payload = new Paho.MQTT.Message(JSON.stringify({
-        //     action: _action,
-        //     x: _x,
-        //     y: _y,
-        //     id: _id,
-        // }));
-        // this.payload.destinationName = 'game/keyid';
-        // this.mqttClient.send(this.payload);
-
-        // this.mqttClient.subscribe('game/keyid/clientid');
-        // this.mqttClient.subscribe('game/keyid/clientid');
-
-    }
-
-    /**
-     * 建立房間
-     */
-    private roomCreate() {
         this.payload = new Paho.MQTT.Message(JSON.stringify({
-            action: 'create',
-            key: 'dadkfh'
+            action: _action,
+            x: _x,
+            y: _y,
+            id: _id,
         }));
-        this.payload.destinationName = 'room';
+        this.payload.destinationName = `game/${this.masterId}`;
         this.mqttClient.send(this.payload);
-
-        this.mqttClient.subscribe('create/keyid');
-    }
-
-    private btnTouchHandler(event: egret.TouchEvent): void {
-
-        if (this.mqttClient.isConnected) {
-            // 加入房間 
-            this.mqttClient.subscribe('join/keyid');
-        }
 
     }
 }
