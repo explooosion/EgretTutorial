@@ -20,27 +20,15 @@ var fighter;
         __extends(GameContainer, _super);
         function GameContainer() {
             var _this = _super.call(this) || this;
-            /**我的子弹*/
-            _this.myBullets = [];
-            /**敌人的飞机*/
-            _this.enemyFighters = [];
-            /**触发创建敌机的间隔*/
-            _this.enemyFightersTimer = new egret.Timer(1000);
-            /**敌人的子弹*/
-            _this.enemyBullets = [];
-            /**我的成绩*/
-            _this.myScore = 0;
             _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
             return _this;
         }
-        /**初始化*/
         GameContainer.prototype.onAddToStage = function (event) {
             this.removeEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
             this.createGameScene();
         };
-        /**创建游戏场景*/
         GameContainer.prototype.createGameScene = function () {
-            this.bg = new fighter.BgMap(); //创建可滚动的背景
+            this.bg = new fighter.BgMap();
             this.addChild(this.bg);
             this.stageW = this.stage.stageWidth;
             this.stageH = this.stage.stageHeight;
@@ -49,7 +37,6 @@ var fighter;
             this.btnStart.x = (this.stageW - this.btnStart.width) / 2; //居中定位
             this.btnStart.y = (this.stageH - this.btnStart.height) / 2; //居中定位
             this.btnStart.touchEnabled = true; //开启触碰
-            //点击按钮开始游戏.下面再添加 gameStart 方法，记得要把这一行的注释取消掉哦。
             this.btnStart.addEventListener(egret.TouchEvent.TOUCH_TAP, this.gameStart, this);
             this.addChild(this.btnStart);
             //我的飞机
@@ -60,23 +47,7 @@ var fighter;
         /**游戏开始*/
         GameContainer.prototype.gameStart = function () {
             this.bg.start();
-            this.myFighter.fire(); //我的飞机开火
-            this.enemyFightersTimer.addEventListener(egret.TimerEvent.TIMER, this.createEnemyFighter, this);
-            this.enemyFightersTimer.start();
             this.addEventListener(egret.Event.ENTER_FRAME, this.gameViewUpdate, this);
-            this.touchEnabled = true;
-            this.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.touchHandler, this);
-        };
-        /**创建敌机*/
-        GameContainer.prototype.createEnemyFighter = function (evt) {
-            var enemyFighter = fighter.Airplane.produce("cat_png", 1000);
-            enemyFighter.x = Math.random() * (this.stageW - enemyFighter.width); //随机坐标
-            enemyFighter.y = -enemyFighter.height - Math.random() * 300; //随机坐标
-            enemyFighter.fire();
-            this.addChildAt(enemyFighter, this.numChildren - 1);
-            this.enemyFighters.push(enemyFighter);
-            this.myFighter.addEventListener("createBullet", this.createBulletHandler, this);
-            enemyFighter.addEventListener("createBullet", this.createBulletHandler, this); //在createEnemyFighter方法中修改
         };
         /**游戏画面更新*/
         GameContainer.prototype.gameViewUpdate = function (evt) {
@@ -85,84 +56,8 @@ var fighter;
             var fps = 1000 / (nowTime - this._lastTime);
             this._lastTime = nowTime;
             var speedOffset = 60 / fps;
-            //我的子弹运动
-            var i = 0;
-            var bullet;
-            var myBulletsCount = this.myBullets.length;
-            for (; i < myBulletsCount; i++) {
-                bullet = this.myBullets[i];
-                if (bullet.y < -bullet.height) {
-                    this.removeChild(bullet);
-                    fighter.Bullet.reclaim(bullet, 'cat_png');
-                    this.myBullets.splice(i, 1);
-                    i--;
-                    myBulletsCount--;
-                }
-                bullet.y -= 12 * speedOffset;
-            }
-            //敌人飞机运动
-            var theFighter;
-            var enemyFighterCount = this.enemyFighters.length;
-            for (i = 0; i < enemyFighterCount; i++) {
-                theFighter = this.enemyFighters[i];
-                if (theFighter.y > this.stage.stageHeight) {
-                    this.removeChild(theFighter);
-                    fighter.Airplane.reclaim(theFighter);
-                    theFighter.removeEventListener("createBullet", this.createBulletHandler, this);
-                    theFighter.stopFire();
-                    this.enemyFighters.splice(i, 1);
-                    i--;
-                    enemyFighterCount--;
-                }
-                theFighter.y += 4 * speedOffset;
-            }
-            //敌人子弹运动
-            var enemyBulletsCount = this.enemyBullets.length;
-            for (i = 0; i < enemyBulletsCount; i++) {
-                bullet = this.enemyBullets[i];
-                if (bullet.y > this.stage.stageHeight) {
-                    this.removeChild(bullet);
-                    fighter.Bullet.reclaim(bullet, 'cat_png');
-                    this.enemyBullets.splice(i, 1);
-                    i--;
-                    enemyBulletsCount--; //数组长度已经改变
-                }
-                bullet.y += 8 * speedOffset;
-            }
-            this.gameHitTest();
-        };
-        /**响应Touch*/
-        GameContainer.prototype.touchHandler = function (evt) {
-            if (evt.type == egret.TouchEvent.TOUCH_MOVE) {
-                var tx = evt.localX;
-                tx = Math.max(0, tx);
-                tx = Math.min(this.stageW - this.myFighter.width, tx);
-                this.myFighter.x = tx;
-            }
-        };
-        /**游戏碰撞检测*/
-        GameContainer.prototype.gameHitTest = function () {
-        };
-        /**创建子弹(包括我的子弹和敌机的子弹)*/
-        GameContainer.prototype.createBulletHandler = function (evt) {
-            var bullet;
-            if (evt.target == this.myFighter) {
-                for (var i = 0; i < 2; i++) {
-                    bullet = fighter.Bullet.produce("b1");
-                    bullet.x = i == 0 ? (this.myFighter.x + 10) : (this.myFighter.x + this.myFighter.width - 22);
-                    bullet.y = this.myFighter.y + 30;
-                    this.addChildAt(bullet, this.numChildren - 1 - this.enemyFighters.length);
-                    this.myBullets.push(bullet);
-                }
-            }
-            else {
-                var theFighter = evt.target;
-                bullet = fighter.Bullet.produce("b2");
-                bullet.x = theFighter.x + 28;
-                bullet.y = theFighter.y + 10;
-                this.addChildAt(bullet, this.numChildren - 1 - this.enemyFighters.length);
-                this.enemyBullets.push(bullet);
-            }
+            // var bullet: fighter.Bullet;
+            // bullet.y -= 12 * speedOffset;
         };
         return GameContainer;
     }(egret.DisplayObjectContainer));
