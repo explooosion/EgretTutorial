@@ -35,40 +35,17 @@ class Main extends egret.DisplayObjectContainer {
      */
     private loadingView: LoadingUI;
 
-
     /**
-     * Paho MQTT 訊息交換
+     * 遊戲背景圖
      */
-    private mqttClient: Paho.MQTT.Client;
-    private payload: Paho.MQTT.Message;
-
-    private gd: GameData;
-
-    private img: egret.Bitmap;
+    private bg: fighter.BgMap;
 
     public constructor() {
         super();
-        this.gd = new GameData();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
 
     private onAddToStage(event: egret.Event) {
-
-        egret.lifecycle.addLifecycleListener((context) => {
-            // custom lifecycle plugin
-
-            context.onUpdate = () => {
-                // console.log('hello,world')
-            }
-        })
-
-        egret.lifecycle.onPause = () => {
-            egret.ticker.pause();
-        }
-
-        egret.lifecycle.onResume = () => {
-            egret.ticker.resume();
-        }
 
         //设置加载进度界面
         //Config to load process interface
@@ -105,8 +82,9 @@ class Main extends egret.DisplayObjectContainer {
             RES.removeEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
             RES.removeEventListener(RES.ResourceEvent.GROUP_PROGRESS, this.onResourceProgress, this);
             RES.removeEventListener(RES.ResourceEvent.ITEM_LOAD_ERROR, this.onItemLoadError, this);
-            this.createGameScene();
-            this.connect();
+            //游戏的主类开始实例化
+            var gameContainer: fighter.GameContainer = new fighter.GameContainer();
+            this.addChild(gameContainer);
         }
     }
 
@@ -151,174 +129,6 @@ class Main extends egret.DisplayObjectContainer {
         return result;
     }
 
-    /**
-     * 创建游戏场景
-     * Create a game scene
-     */
-    private createGameScene() {
-
-        // Image
-        this.img = this.createBitmapByName("cartoon-egret_00_png");
-        this.addChild(this.img);
-        this.img.x = 26;
-        this.img.y = 33;
-
-        this.img.x = this.stage.stageWidth * .5;
-        this.img.y = this.stage.stageHeight * .5;
-
-        // Button
-        var btnImg = new egret.Bitmap();
-        btnImg = this.createBitmapByName("button-join_png");
-        this.addChild(btnImg);
-        btnImg.x = 0;
-        btnImg.y = 0;
-        btnImg.touchEnabled = true;
-        btnImg.addEventListener(egret.TouchEvent.TOUCH_TAP, this.btnTouchHandler, this);
-
-        // touchAPEventer
-        this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, (event: egret.TouchEvent) => {
-            //console.log(`${event.stageX}:${event.stageY}`);
-            // egret.Tween.get(this.img)
-            //     .to({ x: event.stageX, y: event.stageY }, 300, egret.Ease.quadIn);
-        }, this);
-
-        // keyDownEventer
-        var _Main = this;
-        document.addEventListener("keydown", (event: KeyboardEvent) => {
-            switch (event.which) {
-                case 37:
-                    console.log('左');
-                    _Main.moveCharacter('move', _Main.img.x - 5, _Main.img.y, _Main.gd.playerId);
-                    break;
-                case 38:
-                    console.log('上');
-                    _Main.moveCharacter('move', _Main.img.x, this.img.y - 5, _Main.gd.playerId);
-                    break;
-                case 39:
-                    console.log('右');
-                    _Main.moveCharacter('move', _Main.img.x + 5, _Main.img.y, _Main.gd.playerId);
-                    break;
-                case 40:
-                    console.log('下');
-                    _Main.moveCharacter('move', _Main.img.x, _Main.img.y + 5, _Main.gd.playerId);
-                    break;
-            }
-        });
-    }
-
-
-    /**
-     * MQTT 連線
-     * Connect to MQTT Server
-     */
-    private connect(): void {
-
-        this.mqttClient = new Paho.MQTT.Client(this.gd.serverAddress, this.gd.serverPort, this.gd.clientId);
-        const connectionOptions = {
-            keepAliveInterval: 30,
-            // requestQoS: 0,
-            onSuccess: (): void => {
-                console.log('onSuccess', 'connecting success.');
-
-                // 先開測試房間
-                // this.payload = new Paho.MQTT.Message(JSON.stringify({
-                //     action: 'create',
-                //     key: this.masterId
-                // }));
-                // this.payload.destinationName = 'room';
-                // this.mqttClient.send(this.payload);
-
-                // 訂閱-開新房間有沒有開成功
-                // this.mqttClient.subscribe(`create/${this.masterId}`);
-
-            },
-            onFailure(message) {
-                console.log('connection failed: ' + message.errorMessage);
-            }
-        };
-
-        this.mqttClient.connect(connectionOptions);
-
-        this.mqttClient.onMessageArrived = async (message) => {
-            let msg;
-            try {
-                msg = JSON.parse(message.payloadString)
-            } catch (e) {
-                msg = message.payloadString;
-            }
-            const topic = message.destinationName;
-            // console.log({
-            //     topic,
-            //     msg,
-            // });
-
-            // use switch ... case to do sth.
-            switch (topic) {
-                case `join/${this.gd.masterId}`:
-
-                    this.gd.playerId = msg.id;
-                    this.gd.mapId = msg.map;
-
-                    // 加入房間後立即取得角色資訊
-                    this.mqttClient.subscribe(`game/${this.gd.masterId}/${this.gd.playerId}`);
-                    break;
-
-                case `game/${this.gd.masterId}/${this.gd.playerId}`:
-
-                    let res: StatusSub = msg;
-                    this.gd.player = res;
-
-                    console.log(this.gd.player);
-
-                    egret.Tween.get(this.img)
-                        .to({ x: this.gd.player.x, y: this.gd.player.y }, 300, egret.Ease.sineInOut);
-
-                    break;
-            }
-        };
-
-        this.mqttClient.onConnectionLost = (): void => {
-            console.log('connection to server lost. Attempting to reconnect in ' + this.gd.reconnectTimeout + ' ms');
-            setTimeout(this.connect, this.gd.reconnectTimeout);
-        };
-    }
-
-    /**
-     * 加入房間
-     */
-    private roomJoin() {
-        this.payload = new Paho.MQTT.Message(JSON.stringify({
-            action: 'join',
-            key: this.gd.masterId
-        }));
-        this.payload.destinationName = 'room';
-        this.mqttClient.send(this.payload);
-
-        this.mqttClient.subscribe(`join/${this.gd.masterId}`);
-    }
-
-    private btnTouchHandler(event: egret.TouchEvent): void {
-        if (this.mqttClient.isConnected) {
-            // 加入房間 
-            this.roomJoin();
-        }
-    }
-
-    /**
-     * 角色移動
-     */
-    private moveCharacter(_action, _x, _y, _id): void {
-
-        this.payload = new Paho.MQTT.Message(JSON.stringify({
-            action: _action,
-            x: _x,
-            y: _y,
-            id: _id,
-        }));
-        this.payload.destinationName = `game/${this.gd.masterId}`;
-        this.mqttClient.send(this.payload);
-
-    }
 }
 
 

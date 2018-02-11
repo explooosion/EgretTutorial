@@ -35,7 +35,7 @@ egret_native.egretStart = function () {
 		frameRate: 30,
 		scaleMode: "exactFit",
 		contentWidth: 1920,
-		contentHeight: 1080,
+		contentHeight: 650,
 		showPaintRect: false,
 		showFPS: false,
 		fpsStyles: "x:0,y:0,size:12,textColor:0xffffff,bgAlpha:0.9",

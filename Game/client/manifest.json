@@ -10,10 +10,17 @@
 		"libs/modules/paho-mqtt/paho-mqtt.js"
 	],
 	"game": [
+		"bin-debug/fighter/Bullet.js",
 		"bin-debug/LoadingUI.js",
-		"bin-debug/Main.js",
+		"bin-debug/old.Main.js",
 		"bin-debug/class/GameData.js",
+		"bin-debug/fighter/Airplane.js",
+		"bin-debug/fighter/BgMap.js",
+		"bin-debug/Main.js",
+		"bin-debug/fighter/GameContainer.js",
+		"bin-debug/fighter/ScorePanel.js",
 		"bin-debug/interface/Character.js",
-		"bin-debug/interface/Room.js"
+		"bin-debug/interface/Room.js",
+		"bin-debug/utils/GameUtil.js"
 	]
 }
