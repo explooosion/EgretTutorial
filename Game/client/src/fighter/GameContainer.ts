@@ -37,12 +37,22 @@ module fighter {
             this.btnStart.y = (this.stageH - this.btnStart.height) / 2;//居中定位
             this.btnStart.touchEnabled = true;//开启触碰
             this.btnStart.addEventListener(egret.TouchEvent.TOUCH_TAP, this.gameStart, this);
-            this.addChild(this.btnStart);
+            // this.addChild(this.btnStart);
+
+            //开始按钮
+            var _btnStart = fighter.createBitmapByName("button_join_png");//开始按钮
+            _btnStart.x = (this.stageW - _btnStart.width) / 5;//居中定位
+            _btnStart.y = (this.stageH - _btnStart.height) / 5;//居中定位
+            _btnStart.touchEnabled = true;//开启触碰
+            _btnStart.addEventListener(egret.TouchEvent.TOUCH_TAP, () => { this.bg.pause(); }, this);
+            // this.addChild(_btnStart);
 
             //我的飞机
             this.myFighter = new fighter.Airplane(RES.getRes("man_png"), 100, "man_png");
             this.myFighter.y = this.stageH - this.myFighter.height - 50;
-            this.addChild(this.myFighter);
+            // this.addChild(this.myFighter);
+
+            this.gameStart();
         }
 
         /**游戏开始*/

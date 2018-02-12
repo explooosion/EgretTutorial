@@ -21,7 +21,7 @@ var fighter;
         function BgMap() {
             var _this = _super.call(this) || this;
             // 場景移動速度
-            _this.speed = 5;
+            _this.speed = 10;
             _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
             return _this;
         }
@@ -34,11 +34,12 @@ var fighter;
             // 計算當前容器(或螢幕), 需要多少張圖片才能填滿
             this.rowCount = Math.ceil(this.stageW / this.textureWidth) + 1;
             this.bmpArr = [];
+            console.log(this.rowCount);
             // 將圖片並列在一起
             for (var i = 0; i < this.rowCount; i++) {
                 var bgBmp = fighter.createBitmapByName("game_bg_jpg");
-                bgBmp.x = this.textureWidth * i - (this.textureWidth * this.rowCount - this.stageW);
-                ;
+                bgBmp.x = this.textureWidth * i;
+                console.log(bgBmp.x);
                 this.bmpArr.push(bgBmp);
                 this.addChild(bgBmp);
             }
@@ -54,15 +55,19 @@ var fighter;
          * 滾動 - ENTER_FRAME
          */
         BgMap.prototype.enterFrameHandler = function (event) {
+            var _this = this;
             for (var i = 0; i < this.rowCount; i++) {
-                var bgBmp = this.bmpArr[i];
-                bgBmp.x -= this.speed;
-                // 當最左邊圖片超過尺寸時移除,並重新推入陣列內
-                if (i == 0 && Math.abs(bgBmp.x) >= this.textureWidth) {
+                if (this.bmpArr[i].x <= -1 * this.textureWidth) {
+                    var bgBmp = this.bmpArr[i];
                     bgBmp.x = this.bmpArr[this.rowCount - 1].x + this.textureWidth;
                     this.bmpArr.shift();
                     this.bmpArr.push(bgBmp);
+                    // 處理位置跳格問題
+                    this.bmpArr.forEach(function (bmp) {
+                        bmp.x += _this.speed;
+                    });
                 }
+                this.bmpArr[i].x -= this.speed;
             }
         };
         /**

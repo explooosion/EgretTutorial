@@ -20,7 +20,7 @@ module fighter {
         private textureWidth: number;
 
         // 場景移動速度
-        private speed: number = 5;
+        private speed: number = 10;
 
         public constructor() {
             super();
@@ -39,11 +39,12 @@ module fighter {
             // 計算當前容器(或螢幕), 需要多少張圖片才能填滿
             this.rowCount = Math.ceil(this.stageW / this.textureWidth) + 1;
             this.bmpArr = [];
-
+            console.log(this.rowCount);
             // 將圖片並列在一起
             for (var i: number = 0; i < this.rowCount; i++) {
                 var bgBmp: egret.Bitmap = fighter.createBitmapByName("game_bg_jpg");
-                bgBmp.x = this.textureWidth * i - (this.textureWidth * this.rowCount - this.stageW);;
+                bgBmp.x = this.textureWidth * i;
+                console.log(bgBmp.x);
                 this.bmpArr.push(bgBmp);
                 this.addChild(bgBmp);
             }
@@ -60,17 +61,25 @@ module fighter {
         /**
          * 滾動 - ENTER_FRAME
          */
-        private enterFrameHandler(event: egret.Event): void {
-            for (var i: number = 0; i < this.rowCount; i++) {
-                var bgBmp: egret.Bitmap = this.bmpArr[i];
-                bgBmp.x -= this.speed;
+        private enterFrameHandler(event: egret.Event) {
 
-                // 當最左邊圖片超過尺寸時移除,並重新推入陣列內
-                if (i == 0 && Math.abs(bgBmp.x) >= this.textureWidth) {
+            for (var i: number = 0; i < this.rowCount; i++) {
+
+                if (this.bmpArr[i].x <= -1 * this.textureWidth) {
+
+                    var bgBmp: egret.Bitmap = this.bmpArr[i];
                     bgBmp.x = this.bmpArr[this.rowCount - 1].x + this.textureWidth;
+
                     this.bmpArr.shift();
                     this.bmpArr.push(bgBmp);
+
+                    // 處理位置跳格問題
+                    this.bmpArr.forEach(bmp => {
+                        bmp.x += this.speed;
+                    });
+
                 }
+                this.bmpArr[i].x -= this.speed;
             }
         }
 
