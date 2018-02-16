@@ -1,0 +1,30 @@
+{
+	"groups": [
+		{
+			"name": "preload",
+			"keys": "girl_json,girl_png,metal_json,metal_png"
+		}
+	],
+	"resources": [
+		{
+			"name": "girl_json",
+			"type": "json",
+			"url": "girl.json"
+		},
+		{
+			"name": "girl_png",
+			"type": "image",
+			"url": "girl.png"
+		},
+		{
+			"name": "metal_json",
+			"type": "json",
+			"url": "metal.json"
+		},
+		{
+			"name": "metal_png",
+			"type": "image",
+			"url": "metal.png"
+		}
+	]
+}
