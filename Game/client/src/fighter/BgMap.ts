@@ -40,6 +40,7 @@ module fighter {
             this.rowCount = Math.ceil(this.stageW / this.textureWidth) + 1;
             this.bmpArr = [];
             console.log(this.rowCount);
+
             // 將圖片並列在一起
             for (var i: number = 0; i < this.rowCount; i++) {
                 var bgBmp: egret.Bitmap = fighter.createBitmapByName("game_bg_jpg");

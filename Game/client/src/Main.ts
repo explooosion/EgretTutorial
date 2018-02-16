@@ -35,11 +35,6 @@ class Main extends egret.DisplayObjectContainer {
      */
     private loadingView: LoadingUI;
 
-    /**
-     * 遊戲背景圖
-     */
-    private bg: fighter.BgMap;
-
     public constructor() {
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
@@ -76,16 +71,16 @@ class Main extends egret.DisplayObjectContainer {
      * Preload resource group is loaded
      */
     private onResourceLoadComplete(event: RES.ResourceEvent) {
-        if (event.groupName == "preload") {
-            this.stage.removeChild(this.loadingView);
-            RES.removeEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
-            RES.removeEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
-            RES.removeEventListener(RES.ResourceEvent.GROUP_PROGRESS, this.onResourceProgress, this);
-            RES.removeEventListener(RES.ResourceEvent.ITEM_LOAD_ERROR, this.onItemLoadError, this);
-            //游戏的主类开始实例化
-            var gameContainer: fighter.GameContainer = new fighter.GameContainer();
-            this.addChild(gameContainer);
-        }
+if (event.groupName == "preload") {
+    this.stage.removeChild(this.loadingView);
+    RES.removeEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
+    RES.removeEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
+    RES.removeEventListener(RES.ResourceEvent.GROUP_PROGRESS, this.onResourceProgress, this);
+    RES.removeEventListener(RES.ResourceEvent.ITEM_LOAD_ERROR, this.onItemLoadError, this);
+    //游戏的主类开始实例化
+    var gameContainer: fighter.GameContainer = new fighter.GameContainer();
+    this.addChild(gameContainer);
+}
     }
 
     /**
