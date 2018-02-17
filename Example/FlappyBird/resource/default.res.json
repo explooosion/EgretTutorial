@@ -1,0 +1,60 @@
+{
+	"groups": [
+		{
+			"keys": "bg_jpg,bird_json,bird_png,girl_json,girl_png,man_png,man_json,metal_png,metal_json,tube_png",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"url": "bg.jpg",
+			"type": "image",
+			"name": "bg_jpg"
+		},
+		{
+			"name": "bird_json",
+			"type": "json",
+			"url": "bird.json"
+		},
+		{
+			"name": "bird_png",
+			"type": "image",
+			"url": "bird.png"
+		},
+		{
+			"name": "girl_json",
+			"type": "json",
+			"url": "girl.json"
+		},
+		{
+			"name": "girl_png",
+			"type": "image",
+			"url": "girl.png"
+		},
+		{
+			"name": "man_png",
+			"type": "image",
+			"url": "man.png"
+		},
+		{
+			"name": "man_json",
+			"type": "json",
+			"url": "man.json"
+		},
+		{
+			"name": "metal_png",
+			"type": "image",
+			"url": "metal.png"
+		},
+		{
+			"name": "metal_json",
+			"type": "json",
+			"url": "metal.json"
+		},
+		{
+			"name": "tube_png",
+			"type": "image",
+			"url": "tube.png"
+		}
+	]
+}

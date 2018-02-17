@@ -1,0 +1,19 @@
+{
+	"initial": [
+		"libs/modules/egret/egret.js",
+		"libs/modules/egret/egret.web.js",
+		"libs/modules/game/game.js",
+		"libs/modules/res/res.js",
+		"promise/bin/promise.js",
+		"libs/modules/p2/p2.js"
+	],
+	"game": [
+		"bin-debug/Main.js",
+		"bin-debug/flappy/BgMap.js",
+		"bin-debug/flappy/Bird.js",
+		"bin-debug/flappy/GameContainer.js",
+		"bin-debug/flappy/Score.js",
+		"bin-debug/flappy/Tube.js",
+		"bin-debug/utils/GameUtil.js"
+	]
+}
