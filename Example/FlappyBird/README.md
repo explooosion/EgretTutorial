@@ -1,13 +1,15 @@
-# Egret-ScrollScene
-This is a demo for egret with scroll scene
-
-
-## Blog
-[Egret - Bitmap 無限の滾動背景實作](https://dotblogs.com.tw/explooosion/2018/02/13/202500)
-
+# Egret-FlappyBird
+This is a demo game - _FlappyBird_
+ 
+## Demo
+![gif](https://media.giphy.com/media/6bdfUzYGKzdyW09Yz1/giphy.gif)
+ 
 ## Clone
 ```bash
 git clone https://github.com/explooosion/Egret-ScrollScene.git
+```
+```bash
+cd Example/FlappyBirld
 ```
 
 ## Install Engine
@@ -32,4 +34,3 @@ Please use [Egret Wing](https://www.egret.com/products/wing.html) to open the pr
 
 `Shift` + `Ctrl` + `B`  
 
-![gif](https://media.giphy.com/media/xThtalvWfKzqmqUniE/giphy.gif)
